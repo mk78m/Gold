@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#07090d">
+  <meta name="description" content="GOLD SIGNAL PRO — نمودار کندلی و تحلیل تکنیکال طلا با داده واقعی XAUS">
+  <title>GOLD SIGNAL PRO — XAUS</title>
+  <link rel="stylesheet" href="./assets/styles.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="head">
+      <div class="brand">
+        <div class="logo">Au</div>
+        <div>
+          <h1>GOLD SIGNAL PRO</h1>
+          <div class="sub">Gold Spot · داده واقعی از XAUS · بدون TGJU</div>
+        </div>
+      </div>
+      <div class="status" id="statusBox"><span class="dot"></span><span id="status">در حال اتصال…</span></div>
+    </header>
+
+    <div class="stats">
+      <div class="mini"><small>Gold Spot / oz</small><strong id="price">—</strong></div>
+      <div class="mini"><small>OHLC آخرین کندل</small><strong id="ohlc">—</strong></div>
+      <div class="mini"><small>تغییر نسبت به کندل قبل</small><strong id="chg">—</strong></div>
+      <div class="mini"><small>High / Low آخرین کندل</small><strong id="hl">—</strong></div>
+      <div class="mini"><small>آخرین بروزرسانی</small><strong id="updated">—</strong></div>
+    </div>
+
+    <div class="grid">
+      <main class="card">
+        <div class="titlebar">
+          <div>
+            <div class="section">نمودار طلا — Candlestick</div>
+            <div class="muted">فقط OHLC دریافتی از API نمایش داده می‌شود؛ در صورت نبود یا نامعتبر بودن داده، کندل ساختگی تولید نمی‌شود.</div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <button class="btn active" data-range="1y" data-interval="1d">روزانه · ۱ سال</button>
+          <button class="btn" data-range="5y" data-interval="1d">روزانه · ۵ سال</button>
+          <button class="btn" data-range="1mo" data-interval="1h">ساعتی · ۱ ماه</button>
+          <button class="btn" data-range="5d" data-interval="15m">۱۵ دقیقه‌ای · ۵ روز</button>
+          <button class="btn" data-range="1d" data-interval="2m">۲ دقیقه‌ای · ۱ روز</button>
+          <button class="btn" id="reload">↻ دریافت مجدد</button>
+        </div>
+
+        <div class="chartwrap">
+          <canvas id="chart" aria-label="نمودار کندلی طلا"></canvas>
+          <div class="legend">
+            <span>● قیمت</span>
+            <span class="up">▲ صعودی</span>
+            <span class="down">▼ نزولی</span>
+          </div>
+          <div class="loading" id="loading">در حال بارگذاری…</div>
+        </div>
+        <div class="note" id="chartNote"></div>
+      </main>
+
+      <aside>
+        <div class="card">
+          <div class="section">تحلیل تکنیکال</div>
+
+          <div class="signal">
+            <b id="sig">WAIT</b>
+            <span class="score" id="score">—</span>
+          </div>
+          <div class="meter"><i id="meter"></i></div>
+
+          <div class="row"><span>EMA 20</span><b id="ema20">—</b></div>
+          <div class="row"><span>EMA 50</span><b id="ema50">—</b></div>
+          <div class="row"><span>EMA 200</span><b id="ema200">—</b></div>
+
+          <div class="indgrid">
+            <div class="ind"><small>RSI 14</small><b id="rsi">—</b></div>
+            <div class="ind"><small>MACD</small><b id="macd">—</b></div>
+            <div class="ind"><small>Bollinger</small><b id="bb">—</b></div>
+            <div class="ind"><small>ATR 14</small><b id="atr">—</b></div>
+            <div class="ind"><small>Stochastic</small><b id="stoch">—</b></div>
+            <div class="ind"><small>ADX</small><b id="adx">—</b></div>
+            <div class="ind"><small>SMA 20</small><b id="sma20">—</b></div>
+            <div class="ind"><small>CCI 20</small><b id="cci">—</b></div>
+            <div class="ind"><small>Williams %R</small><b id="will">—</b></div>
+            <div class="ind"><small>OBV</small><b id="obv">N/A</b></div>
+          </div>
+
+          <div class="note">
+            سیگنال یک امتیازدهی تکنیکال ساده است و پیش‌بینی قطعی نیست.
+            OBV فقط با حجم واقعی محاسبه می‌شود؛ اگر حجم در داده منبع نباشد، N/A می‌ماند.
+          </div>
+        </div>
+
+        <div class="card source-card">
+          <div class="section">منابع و وضعیت داده</div>
+          <div class="source" id="sourceInfo">
+            منبع نمودار: XAUS API<br>
+            وضعیت داده: —
+          </div>
+          <div class="source">
+            API بدون کلید و با CORS باز ارائه شده است. XAUS قیمت‌های indicative/mid-market ارائه می‌کند؛ این داده‌ها quote معاملاتی یا نرخ تسویه نیستند.
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script src="./assets/app.js" defer></script>
+</body>
+</html>
