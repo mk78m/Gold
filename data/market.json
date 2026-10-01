@@ -1,6 +1,6 @@
 {
   "schema": "gold-iran-market-v2",
-  "updated_at": null,
+  "updated_at": "2026-10-01T16:05:00Z",
   "source": "TGJU",
   "symbol": "IRG18",
   "currency": "IRR",
@@ -25,7 +25,12 @@
       "change_pct": 0.37
     }
   ],
-  "intraday_5m": [],
+  "intraday_5m": [
+    {
+      "time": "2026-10-01T16:05:00Z",
+      "price": 251021000
+    }
+  ],
   "meta": {
     "note": "Intraday history starts accumulating after GitHub Actions is enabled; it is built from observed TGJU snapshots, not exchange tick data."
   }
