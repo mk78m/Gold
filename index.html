@@ -1,0 +1,42 @@
+<!doctype html><html lang="fa" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gold Iran JSON Pro</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#07111f;color:#edf5ff;font-family:Tahoma,Arial,sans-serif}.wrap{max-width:1200px;margin:auto;padding:16px}
+header{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}h1{font-size:22px;margin:0}.muted{color:#8da2ba;font-size:11px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.card{background:#0c1828;border:1px solid #193049;border-radius:15px;padding:14px}.label{font-size:11px;color:#8da2ba}.price{font-size:23px;font-weight:800;margin:7px 0}
+.main{display:grid;grid-template-columns:1.6fr 1fr;gap:11px;margin-top:11px}.title{font-weight:800;font-size:14px;margin-bottom:9px}.tabs{display:flex;gap:6px}.tab{background:#0d1d30;color:#b9c9dc;border:1px solid #29435d;border-radius:8px;padding:7px 10px;font-size:10px}.tab.active{background:#173550;color:white}.chart{height:330px}.chart canvas{width:100%;height:100%}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.mini{background:#091521;border:1px solid #172a40;border-radius:9px;padding:8px;font-size:9px;color:#849ab1}.mini b{display:block;color:#edf5ff;margin-top:4px}
+.signal{background:#0e1e31;border:1px solid #29415c;border-radius:12px;padding:12px}.signal b{font-size:19px}.meter{height:8px;background:#182c43;border-radius:8px;overflow:hidden;margin:8px 0}.meter i{display:block;height:100%;background:#72e6a7;width:50%}.row{display:flex;justify-content:space-between;border-top:1px solid #172b41;padding:8px 0;font-size:11px;gap:10px}
+.note{margin-top:11px;background:#091522;padding:11px;border-radius:10px;color:#7f95ad;font-size:10px;line-height:1.9}.up{color:#72e6a7}.down{color:#ff718b}.yellow{color:#ffd166}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.main{grid-template-columns:1fr}}@media(max-width:480px){.grid{grid-template-columns:1fr 1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+</style></head><body><div class="wrap">
+<header><div><h1>Gold Iran — JSON Market Engine</h1><div class="muted">داده واقعی TGJU → JSON → کندل چندتایم‌فریمی → تحلیل چنداندیکاتوری</div></div><div id="status" class="muted">اتصال…</div></header>
+<section class="grid">
+<div class="card"><div class="label">طلای ۱۸ عیار</div><div id="p" class="price">—</div><div class="muted">تومان / گرم</div></div>
+<div class="card"><div class="label">آخرین مشاهده</div><div id="time" class="price">—</div><div class="muted">UTC</div></div>
+<div class="card"><div class="label">تعداد نمونه ۵ دقیقه‌ای</div><div id="n" class="price">—</div><div class="muted">ذخیره‌شده در JSON</div></div>
+<div class="card"><div class="label">بازه داده</div><div id="range" class="price">—</div><div class="muted">از اولین نمونه</div></div>
+</section>
+<div class="main"><section class="card"><div class="title">کندل‌های ساخته‌شده از JSON</div>
+<div class="tabs"><button class="tab active" data-tf="5">5m</button><button class="tab" data-tf="15">15m</button><button class="tab" data-tf="60">1H</button><button class="tab" data-tf="240">4H</button><button class="tab" data-tf="D">Daily</button></div>
+<div class="chart"><canvas id="c"></canvas></div></section>
+<section class="card"><div class="title">تحلیل چندتایم‌فریمی</div><div class="signal"><b id="decision">در حال تحلیل…</b><div class="meter"><i id="meter"></i></div><div id="confidence" class="muted">—</div><p id="reason" class="muted">—</p></div>
+<div class="row"><span>روند 5m</span><b id="s5">—</b></div><div class="row"><span>روند 15m</span><b id="s15">—</b></div><div class="row"><span>روند 1H</span><b id="s60">—</b></div><div class="row"><span>RSI</span><b id="rsi">—</b></div><div class="row"><span>MACD</span><b id="macd">—</b></div><div class="row"><span>ADX</span><b id="adx">—</b></div><div class="row"><span>MA20 / MA50</span><b id="ma">—</b></div></section></div>
+<div class="note"><b>نکته مهم:</b> کندل‌های 5m/15m/1H/4H این صفحه از snapshotهای واقعی قیمت که هر ۵ دقیقه در <code>data/market.json</code> ذخیره می‌شوند ساخته می‌شوند. این «داده مشاهده‌شده» است، نه tick-by-tick بازار. آرشیو روزانه TGJU شامل OHLC واقعی روزانه است. پس بعد از فعال شدن GitHub Actions، تاریخچه intraday از همان لحظه شروع به ساخته‌شدن می‌کند.</div>
+</div>
+<script>
+let data=null,tf=5;
+const $=x=>document.getElementById(x),fa=n=>Number(n).toLocaleString('fa-IR',{maximumFractionDigits:0});
+async function load(){try{let r=await fetch('data/market.json?x='+Date.now());data=await r.json();render();$('status').textContent='JSON زنده';}catch(e){$('status').textContent='JSON در دسترس نیست';}}
+function candles(min){if(!data)return[];if(min==='D')return(data.daily||[]).map(x=>({time:x.date,open:x.open,high:x.high,low:x.low,close:x.close}));let a=data.intraday_5m||[],b={};a.forEach(x=>{let d=new Date(x.time),ms=min*60000,k=Math.floor(d.getTime()/ms)*ms,key=new Date(k).toISOString();b[key]??={time:key,open:x.price,high:x.price,low:x.price,close:x.price};let z=b[key];z.high=Math.max(z.high,x.price);z.low=Math.min(z.low,x.price);z.close=x.price});return Object.values(b).sort((a,b)=>a.time.localeCompare(b.time));}
+function sma(a,n){return a.length<n?null:a.slice(-n).reduce((x,y)=>x+y,0)/n}
+function ema(a,n){if(a.length<n)return null;let e=sma(a.slice(0,n),n),k=2/(n+1);for(let i=n;i<a.length;i++)e=a[i]*k+e*(1-k);return e}
+function rsi(a,n=14){if(a.length<n+1)return null;let g=0,l=0;for(let i=a.length-n;i<a.length;i++){let d=a[i]-a[i-1];d>0?g+=d:l-=d}return l?100-100/(1+g/l):100}
+function macd(a){let e12=ema(a,12),e26=ema(a,26);return e12!=null&&e26!=null?e12-e26:null}
+function adx(rs,n=14){if(rs.length<2*n+1)return null;let tr=[],p=[],m=[];for(let i=1;i<rs.length;i++){let h=rs[i].high,l=rs[i].low,ph=rs[i-1].high,pl=rs[i-1].low;tr.push(Math.max(h-l,Math.abs(h-rs[i-1].close),Math.abs(l-rs[i-1].close)));p.push(h-ph>pl-l&&h-ph>0?h-ph:0);m.push(pl-l>h-ph&&pl-l>0?pl-l:0)}let T=sma(tr,n),P=sma(p,n),M=sma(m,n);if(!T)return null;let x=100*P/T,y=100*M/T;return Math.abs(x-y)/(x+y||1)*100}
+function render(){let a=data.intraday_5m||[],d=a.at(-1);if(d){$('p').textContent=fa(d.price/10);$('time').textContent=new Date(d.time).toLocaleTimeString('fa-IR');$('n').textContent=a.length.toLocaleString('fa-IR');$('range').textContent=a.length?new Date(a[0].time).toLocaleDateString('fa-IR'):'—'}let rs=candles(tf==='D'?'D':tf);draw(rs);analyze(rs);['5','15','60'].forEach(x=>{let q=candles(+x),cl=q.map(z=>z.close),m=sma(cl,20);$('s'+x).textContent=m?(cl.at(-1)>m?'صعودی ↗':'نزولی ↘'):'داده کافی نیست'});}
+function analyze(rs){let cl=rs.map(x=>x.close),R=rsi(cl),M=macd(cl),D=adx(rs),m20=sma(cl,20),m50=sma(cl,50);$('rsi').textContent=R?.toFixed(1)||'—';$('macd').textContent=M?.toFixed(0)||'—';$('adx').textContent=D?.toFixed(1)||'—';$('ma').textContent=m20&&m50?fa(m20/10)+' / '+fa(m50/10):'—';let score=0;if(m20)score+=(cl.at(-1)>m20?25:-25);if(m50)score+=(cl.at(-1)>m50?25:-25);if(R!=null)score+=(R>55?20:R<45?-20:0);if(M!=null)score+=(M>0?15:-15);if(D!=null&&D<15)score*=.7;let label=score>=30?'تمایل صعودی':score<=-30?'تمایل نزولی':'خنثی / انتظار';$('decision').textContent=label;$('meter').style.width=(50+score/2)+'%';$('confidence').textContent='هم‌جهتی اندیکاتورها: '+Math.round(50+Math.abs(score)/2)+'%';$('reason').textContent='سیگنال ترکیبی بر اساس MA20/50 + RSI + MACD + ADX و جهت چندتایم‌فریمی.'}
+function draw(rs){let c=$('c'),r=c.getBoundingClientRect(),d=devicePixelRatio||1;c.width=r.width*d;c.height=r.height*d;let x=c.getContext('2d');x.scale(d,d);x.clearRect(0,0,r.width,r.height);if(rs.length<2)return;let hi=Math.max(...rs.map(z=>z.high)),lo=Math.min(...rs.map(z=>z.low)),st=r.width/rs.length,py=p=>r.height-10-(p-lo)/(hi-lo||1)*(r.height-20);x.strokeStyle='#19314a';for(let i=1;i<5;i++){x.beginPath();x.moveTo(0,r.height*i/5);x.lineTo(r.width,r.height*i/5);x.stroke()}rs.slice(-120).forEach((z,i)=>{let xx=i*st+st/2;x.strokeStyle=z.close>=z.open?'#72e6a7':'#ff718b';x.fillStyle=x.strokeStyle;x.beginPath();x.moveTo(xx,py(z.high));x.lineTo(xx,py(z.low));x.stroke();x.fillRect(xx-st*.28,Math.min(py(z.open),py(z.close)),st*.56,Math.max(2,Math.abs(py(z.open)-py(z.close))))})}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(q=>q.classList.remove('active'));b.classList.add('active');tf=b.dataset.tf==='D'?'D':+b.dataset.tf;render()});onresize=()=>data&&render();load();setInterval(load,60000);
+</script></body></html>
