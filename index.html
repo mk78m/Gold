@@ -1,0 +1,156 @@
+<!doctype html><html lang="fa" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gold Iran JSON Pro</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#07111f;color:#edf5ff;font-family:Tahoma,Arial,sans-serif}.wrap{max-width:1200px;margin:auto;padding:16px}
+header{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}h1{font-size:22px;margin:0}.muted{color:#8da2ba;font-size:11px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.card{background:#0c1828;border:1px solid #193049;border-radius:15px;padding:14px}.label{font-size:11px;color:#8da2ba}.price{font-size:23px;font-weight:800;margin:7px 0}
+.main{display:grid;grid-template-columns:1.6fr 1fr;gap:11px;margin-top:11px}.title{font-weight:800;font-size:14px;margin-bottom:9px}.tabs{display:flex;gap:6px}.tab{background:#0d1d30;color:#b9c9dc;border:1px solid #29435d;border-radius:8px;padding:7px 10px;font-size:10px}.tab.active{background:#173550;color:white}.chart{height:330px}.chart canvas{width:100%;height:100%}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.mini{background:#091521;border:1px solid #172a40;border-radius:9px;padding:8px;font-size:9px;color:#849ab1}.mini b{display:block;color:#edf5ff;margin-top:4px}
+.signal{background:#0e1e31;border:1px solid #29415c;border-radius:12px;padding:12px}.signal b{font-size:19px}.meter{height:8px;background:#182c43;border-radius:8px;overflow:hidden;margin:8px 0}.meter i{display:block;height:100%;background:#72e6a7;width:50%}.row{display:flex;justify-content:space-between;border-top:1px solid #172b41;padding:8px 0;font-size:11px;gap:10px}
+.note{margin-top:11px;background:#091522;padding:11px;border-radius:10px;color:#7f95ad;font-size:10px;line-height:1.9}.up{color:#72e6a7}.down{color:#ff718b}.yellow{color:#ffd166}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,1fr)}.main{grid-template-columns:1fr}}@media(max-width:480px){.grid{grid-template-columns:1fr 1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+</style></head><body><div class="wrap">
+<header><div><h1>Gold Iran — JSON Market Engine</h1><div class="muted">داده واقعی TGJU → JSON → کندل چندتایم‌فریمی → تحلیل چنداندیکاتوری</div></div><div id="status" class="muted">اتصال…</div></header>
+<section class="grid">
+<div class="card"><div class="label">طلای ۱۸ عیار</div><div id="p" class="price">—</div><div class="muted">تومان / گرم</div></div>
+<div class="card"><div class="label">آخرین مشاهده</div><div id="time" class="price">—</div><div class="muted">UTC</div></div>
+<div class="card"><div class="label">تعداد نمونه ۵ دقیقه‌ای</div><div id="n" class="price">—</div><div class="muted">ذخیره‌شده در JSON</div></div>
+<div class="card"><div class="label">بازه داده</div><div id="range" class="price">—</div><div class="muted">از اولین نمونه</div></div>
+</section>
+<div class="main"><section class="card"><div class="title">کندل‌های ساخته‌شده از JSON</div>
+<div class="tabs"><button class="tab active" data-tf="5">5m</button><button class="tab" data-tf="15">15m</button><button class="tab" data-tf="60">1H</button><button class="tab" data-tf="240">4H</button><button class="tab" data-tf="D">Daily</button></div>
+<div class="chart"><canvas id="c"></canvas></div></section>
+<section class="card"><div class="title">تحلیل چندتایم‌فریمی</div><div class="signal"><b id="decision">در حال تحلیل…</b><div class="meter"><i id="meter"></i></div><div id="confidence" class="muted">—</div><p id="reason" class="muted">—</p></div>
+<div class="row"><span>روند 5m</span><b id="s5">—</b></div><div class="row"><span>روند 15m</span><b id="s15">—</b></div><div class="row"><span>روند 1H</span><b id="s60">—</b></div><div class="row"><span>RSI</span><b id="rsi">—</b></div><div class="row"><span>MACD (Line / Signal / Hist)</span><b id="macd">—</b></div><div class="row"><span>ADX</span><b id="adx">—</b></div><div class="row"><span>MA20 / MA50</span><b id="ma">—</b></div></section></div>
+<div class="note"><b>نکته مهم:</b> کندل‌های 5m/15m/1H/4H این صفحه از snapshotهای واقعی قیمت که هر ۵ دقیقه در <code>data/market.json</code> ذخیره می‌شوند ساخته می‌شوند. این «داده مشاهده‌شده» است، نه tick-by-tick بازار. آرشیو روزانه TGJU شامل OHLC واقعی روزانه است. پس بعد از فعال شدن GitHub Actions، تاریخچه intraday از همان لحظه شروع به ساخته‌شدن می‌کند.</div>
+</div>
+<script>
+let data=null,tf=5;
+const $=x=>document.getElementById(x);
+const fa=n=>Number(n).toLocaleString('fa-IR',{maximumFractionDigits:0});
+const num=(n,d=1)=>n==null?'—':Number(n).toLocaleString('fa-IR',{maximumFractionDigits:d,minimumFractionDigits:d});
+
+async function load(){
+  try{
+    const r=await fetch('data/market.json?x='+Date.now(),{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    data=await r.json(); render(); $('status').textContent='JSON زنده';
+  }catch(e){ $('status').textContent='JSON در دسترس نیست'; console.error(e); }
+}
+
+function bucketTime(iso,min){
+  const d=new Date(iso), ms=min*60000;
+  return new Date(Math.floor(d.getTime()/ms)*ms).toISOString();
+}
+
+function candles(min){
+  if(!data) return [];
+  if(min==='D') return (data.daily||[]).map(x=>({time:x.date,open:+x.open,high:+x.high,low:+x.low,close:+x.close,source:x.source||'TGJU'}));
+  const src=data.intraday_5m||[], b=new Map();
+  for(const x of src){
+    const price=Number(x.price); if(!Number.isFinite(price)) continue;
+    const key=bucketTime(x.time,min);
+    if(!b.has(key)) b.set(key,{time:key,open:price,high:price,low:price,close:price,count:0});
+    const z=b.get(key); z.high=Math.max(z.high,price); z.low=Math.min(z.low,price); z.close=price; z.count++;
+  }
+  return [...b.values()].sort((a,b)=>a.time.localeCompare(b.time));
+}
+
+function closes(rs){return rs.map(z=>Number(z.close)).filter(Number.isFinite)}
+function sma(a,n){return a.length<n?null:a.slice(-n).reduce((x,y)=>x+y,0)/n}
+function emaSeries(a,n){
+  if(a.length<n) return [];
+  const out=new Array(a.length).fill(null), k=2/(n+1);
+  let e=a.slice(0,n).reduce((x,y)=>x+y,0)/n; out[n-1]=e;
+  for(let i=n;i<a.length;i++){e=a[i]*k+e*(1-k);out[i]=e}
+  return out;
+}
+function ema(a,n){const s=emaSeries(a,n);return s.length?s.at(-1):null}
+function rsi(a,n=14){
+  if(a.length<n+1)return null;
+  let gain=0,loss=0;
+  for(let i=1;i<=n;i++){const d=a[i]-a[i-1];if(d>0)gain+=d;else loss-=d}
+  gain/=n; loss/=n;
+  for(let i=n+1;i<a.length;i++){const d=a[i]-a[i-1],g=Math.max(d,0),l=Math.max(-d,0);gain=(gain*(n-1)+g)/n;loss=(loss*(n-1)+l)/n}
+  if(loss===0)return 100; const rs=gain/loss; return 100-100/(1+rs);
+}
+function macd(a,fast=12,slow=26,signal=9){
+  const ef=emaSeries(a,fast), es=emaSeries(a,slow), line=[];
+  for(let i=0;i<a.length;i++) if(ef[i]!=null&&es[i]!=null) line.push(ef[i]-es[i]);
+  if(line.length<signal)return null;
+  const sig=ema(line,signal); return {line:line.at(-1),signal:sig,hist:line.at(-1)-sig};
+}
+function adx(rs,n=14){
+  if(rs.length<2*n+1)return null;
+  const tr=[],plus=[],minus=[];
+  for(let i=1;i<rs.length;i++){
+    const h=rs[i].high,l=rs[i].low,ph=rs[i-1].high,pl=rs[i-1].low;
+    tr.push(Math.max(h-l,Math.abs(h-rs[i-1].close),Math.abs(l-rs[i-1].close)));
+    const up=h-ph,down=pl-l; plus.push(up>down&&up>0?up:0); minus.push(down>up&&down>0?down:0);
+  }
+  const dx=[]; let T=sma(tr.slice(0,n),n),P=sma(plus.slice(0,n),n),M=sma(minus.slice(0,n),n);
+  for(let i=n;i<tr.length;i++){
+    T=(T*(n-1)+tr[i])/n; P=(P*(n-1)+plus[i])/n; M=(M*(n-1)+minus[i])/n;
+    const pdi=T?100*P/T:0, mdi=T?100*M/T:0; dx.push(100*Math.abs(pdi-mdi)/(pdi+mdi||1));
+  }
+  if(dx.length<n)return null; let a=dx.slice(0,n).reduce((x,y)=>x+y,0)/n;
+  for(let i=n;i<dx.length;i++)a=(a*(n-1)+dx[i])/n;
+  return a;
+}
+function trend(rs){
+  const cl=closes(rs),m20=sma(cl,20); if(!m20||!cl.length)return null;
+  return cl.at(-1)>m20?'صعودی ↗':'نزولی ↘';
+}
+function fmtPrice(v){return v==null?'—':fa(v/10)}
+
+function indicatorSet(rs){
+  const cl=closes(rs), R=rsi(cl), M=macd(cl), D=adx(rs), m20=sma(cl,20),m50=sma(cl,50);
+  return {R,M,D,m20,m50,close:cl.at(-1),ready:{rsi:R!=null,macd:M!=null,adx:D!=null,ma20:m20!=null,ma50:m50!=null}};
+}
+
+function analyze(){
+  const frames=[5,15,60,240], sets={};
+  for(const f of frames) sets[f]=indicatorSet(candles(f));
+  const base=sets[tf==='D'?'240':tf]||indicatorSet(candles(tf));
+  const votes=[];
+  for(const f of frames){const q=sets[f];if(q.m20&&q.close)votes.push(q.close>q.m20?1:-1);if(q.m50&&q.close)votes.push(q.close>q.m50?1:-1);if(q.R!=null)votes.push(q.R>55?1:q.R<45?-1:0);if(q.M)votes.push(q.M.hist>0?1:-1)}
+  let score=votes.length?votes.reduce((a,b)=>a+b,0)/votes.length*100:0;
+  if(base.D!=null&&base.D<15) score*=0.7;
+  const label=score>=30?'تمایل صعودی':score<=-30?'تمایل نزولی':'خنثی / انتظار';
+  $('decision').textContent=label;
+  $('meter').style.width=Math.max(2,Math.min(100,50+score/2))+'%';
+  $('confidence').textContent=votes.length?'هم‌جهتی سیگنال‌ها: '+Math.round(50+Math.abs(score)/2)+'%':'داده کافی نیست';
+  const reasons=[];
+  if(base.m20&&base.m50) reasons.push(base.close>base.m20&&base.m20>base.m50?'MAها ساختار صعودی دارند':base.close<base.m20&&base.m20<base.m50?'MAها ساختار نزولی دارند':'MAها هم‌جهت نیستند');
+  if(base.R!=null) reasons.push('RSI '+num(base.R));
+  if(base.M) reasons.push('MACD '+(base.M.hist>=0?'مثبت':'منفی'));
+  if(base.D!=null) reasons.push('ADX '+num(base.D));
+  $('reason').textContent=reasons.length?reasons.join(' • '):'برای تحلیل، حداقل داده لازم هنوز جمع نشده است.';
+  $('rsi').textContent=base.R==null?'—':num(base.R);
+  $('macd').textContent=base.M==null?'—':num(base.M.line,0)+' / '+num(base.M.signal,0)+' / '+num(base.M.hist,0);
+  $('adx').textContent=base.D==null?'—':num(base.D);
+  $('ma').textContent=base.m20&&base.m50?fmtPrice(base.m20)+' / '+fmtPrice(base.m50):'—';
+  for(const f of [5,15,60]) $(String('s'+f)).textContent=trend(candles(f))||'داده کافی نیست';
+}
+
+function render(){
+  const a=data?.intraday_5m||[], d=a.at(-1);
+  if(d){$('p').textContent=fmtPrice(d.price);$('time').textContent=new Date(d.time).toLocaleTimeString('fa-IR',{timeZone:'UTC'});$('n').textContent=a.length.toLocaleString('fa-IR');$('range').textContent=new Date(a[0].time).toLocaleDateString('fa-IR');}
+  const rs=candles(tf==='D'?'D':tf); draw(rs); analyze();
+}
+
+function draw(rs){
+  const c=$('c'),r=c.getBoundingClientRect(),d=window.devicePixelRatio||1;c.width=Math.max(1,r.width*d);c.height=Math.max(1,r.height*d);
+  const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,r.width,r.height);
+  if(rs.length<2){x.fillStyle='#8da2ba';x.font='12px Tahoma';x.textAlign='center';x.fillText('در انتظار داده‌های کندلی…',r.width/2,r.height/2);return;}
+  const view=rs.slice(-120),hi=Math.max(...view.map(z=>z.high)),lo=Math.min(...view.map(z=>z.low)),st=r.width/view.length;
+  const py=p=>r.height-12-(p-lo)/(hi-lo||1)*(r.height-24);
+  x.strokeStyle='#19314a';x.lineWidth=1;for(let i=1;i<5;i++){x.beginPath();x.moveTo(0,r.height*i/5);x.lineTo(r.width,r.height*i/5);x.stroke()}
+  view.forEach((z,i)=>{const xx=i*st+st/2,up=z.close>=z.open;x.strokeStyle=up?'#72e6a7':'#ff718b';x.fillStyle=x.strokeStyle;x.beginPath();x.moveTo(xx,py(z.high));x.lineTo(xx,py(z.low));x.stroke();const top=Math.min(py(z.open),py(z.close)),h=Math.max(2,Math.abs(py(z.open)-py(z.close)));x.fillRect(Math.max(0,xx-st*.30),top,Math.max(1,st*.60),h)});
+  x.fillStyle='#8da2ba';x.font='10px Tahoma';x.textAlign='left';x.fillText('High '+fmtPrice(hi),8,14);x.fillText('Low '+fmtPrice(lo),8,r.height-3);
+}
+
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(q=>q.classList.remove('active'));b.classList.add('active');tf=b.dataset.tf==='D'?'D':+b.dataset.tf;render()});
+onresize=()=>data&&render();load();setInterval(load,60000);
+</script></body></html>
