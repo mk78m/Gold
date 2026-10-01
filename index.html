@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gold Iran — Daily Analysis Pro</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#07111f;color:#edf5ff;font-family:Tahoma,Arial,sans-serif}.wrap{max-width:1400px;margin:auto;padding:16px}
+header{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}h1{font-size:22px;margin:0}.muted{color:#8da2ba;font-size:11px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.card{background:#0c1828;border:1px solid #193049;border-radius:15px;padding:14px}.label{font-size:11px;color:#8da2ba}.price{font-size:23px;font-weight:800;margin:7px 0}
+.main{display:grid;grid-template-columns:1.65fr 1fr;gap:11px;margin-top:11px}.title{font-weight:800;font-size:14px;margin-bottom:9px}.chart{height:410px}.chart canvas{width:100%;height:100%}
+.signal{background:#0e1e31;border:1px solid #29415c;border-radius:12px;padding:12px}.signal b{font-size:19px}.meter{height:8px;background:#182c43;border-radius:8px;overflow:hidden;margin:8px 0}.meter i{display:block;height:100%;width:50%;background:#72e6a7}.row{display:flex;justify-content:space-between;border-top:1px solid #172b41;padding:8px 0;font-size:11px;gap:10px}.inds{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:10px}.mini{background:#091521;border:1px solid #172a40;border-radius:9px;padding:8px;font-size:9px;color:#849ab1}.mini b{display:block;color:#edf5ff;margin-top:4px;font-size:11px}.up{color:#72e6a7}.down{color:#ff718b}.yellow{color:#ffd166}.note{margin-top:11px;background:#091522;padding:11px;border-radius:10px;color:#7f95ad;font-size:10px;line-height:1.9}
+.future{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:11px}.future .card{min-height:160px}.big{font-size:21px;font-weight:800;margin:7px 0}.bar{height:7px;background:#182c43;border-radius:8px;overflow:hidden}.bar i{display:block;height:100%;background:#72e6a7}
+.statusbox{margin-top:11px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.statusbox .card{padding:10px}.smallv{font-size:13px;font-weight:800;margin-top:5px}
+.tablewrap{margin-top:11px;overflow:auto}.indtable{width:100%;border-collapse:collapse;font-size:10px;min-width:850px}.indtable th,.indtable td{padding:8px;border-bottom:1px solid #172b41;text-align:right}.indtable th{color:#8da2ba;font-weight:normal}.pill{padding:3px 7px;border-radius:8px;background:#14263a}.pos{color:#72e6a7}.neg{color:#ff718b}.neu{color:#ffd166}
+.profit{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:11px}.profit .card{min-height:125px}
+@media(max-width:1050px){.grid{grid-template-columns:repeat(3,1fr)}.main{grid-template-columns:1fr}.statusbox{grid-template-columns:repeat(3,1fr)}}@media(max-width:650px){.grid,.future,.profit,.statusbox{grid-template-columns:1fr 1fr}.inds{grid-template-columns:1fr}.chart{height:330px}}@media(max-width:430px){.grid,.future,.profit,.statusbox{grid-template-columns:1fr}}
+</style>
+</head>
+<body><div class="wrap">
+<header>
+  <div><h1>Gold Iran — Daily Analysis Pro</h1><div class="muted">فقط OHLC روزانه TGJU → ۲۰ اندیکاتور → تحلیل وضعیت فعلی + روند آماری آینده</div></div>
+  <div id="status" class="muted">اتصال…</div>
+</header>
+
+<section class="grid">
+<div class="card"><div class="label">طلای ۱۸ عیار — آخرین بسته‌شدن</div><div id="p" class="price">—</div><div class="muted">تومان / گرم</div></div>
+<div class="card"><div class="label">آخرین کندل روزانه</div><div id="time" class="price">—</div><div class="muted">تاریخ</div></div>
+<div class="card"><div class="label">تعداد کندل قابل‌استفاده</div><div id="n" class="price">—</div><div class="muted">daily OHLC</div></div>
+<div class="card"><div class="label">بازه تاریخ</div><div id="range" class="price">—</div><div class="muted">اولین تا آخرین کندل</div></div>
+<div class="card"><div class="label">بازده ۲۰ روز اخیر</div><div id="ret20" class="price">—</div><div class="muted">بازده واقعی تاریخی</div></div>
+</section>
+
+<div class="statusbox">
+  <div class="card"><div class="label">رکورد خام روزانه</div><div id="rawN" class="smallv">—</div></div>
+  <div class="card"><div class="label">رکورد حذف‌شده به‌دلیل OHLC ناقص</div><div id="badN" class="smallv">—</div></div>
+  <div class="card"><div class="label">منبع داده</div><div id="source" class="smallv">—</div></div>
+  <div class="card"><div class="label">محاسبات</div><div id="calcN" class="smallv">—</div></div>
+  <div class="card"><div class="label">وضعیت داده</div><div id="dataState" class="smallv">—</div></div>
+</div>
+
+<div class="main">
+<section class="card"><div class="title">نمودار کندل روزانه</div><div class="chart"><canvas id="c"></canvas></div>
+<div class="muted" style="margin-top:7px">نمایش ۲۰۰ کندل آخر برای خوانایی؛ تمام محاسبات اندیکاتورها و جست‌وجوی مشابه تاریخی روی کل کندل‌های معتبر انجام می‌شود.</div></section>
+
+<section class="card">
+<div class="title">سیگنال وضعیت فعلی — فقط روزانه</div>
+<div class="signal"><b id="decision">در حال تحلیل…</b><div class="meter"><i id="meter"></i></div><div id="alignment" class="muted">—</div><p id="reason" class="muted">—</p></div>
+<div class="row"><span>روند فعلی</span><b id="trend">—</b></div>
+<div class="row"><span>RSI 14</span><b id="rsi">—</b></div>
+<div class="row"><span>MACD 12/26/9</span><b id="macd">—</b></div>
+<div class="row"><span>ADX 14</span><b id="adx">—</b></div>
+<div class="row"><span>SMA20 / SMA50</span><b id="ma">—</b></div>
+<div class="row"><span>تعداد اندیکاتورهای معتبر</span><b id="validCount">—</b></div>
+</section>
+</div>
+
+<section class="future">
+<div class="card"><div class="title">سیگنال آماری ۱ روز آینده</div><div id="f1label" class="big">—</div><div class="bar"><i id="f1bar"></i></div><div id="f1txt" class="muted" style="margin-top:8px">—</div></div>
+<div class="card"><div class="title">سیگنال آماری ۵ روز آینده</div><div id="f5label" class="big">—</div><div class="bar"><i id="f5bar"></i></div><div id="f5txt" class="muted" style="margin-top:8px">—</div></div>
+<div class="card"><div class="title">سیگنال آماری ۲۰ روز آینده</div><div id="f20label" class="big">—</div><div class="bar"><i id="f20bar"></i></div><div id="f20txt" class="muted" style="margin-top:8px">—</div></div>
+</section>
+
+<section class="profit">
+<div class="card"><div class="title">بازده واقعی اخیر</div><div id="histReturns" class="muted">—</div></div>
+<div class="card"><div class="title">سناریوی تکنیکال بر پایه ATR</div><div id="atrScenario" class="muted">—</div></div>
+<div class="card"><div class="title">بازده مورد انتظار تاریخی</div><div id="expected" class="muted">—</div></div>
+</section>
+
+<section class="card tablewrap">
+<div class="title">۲۰ اندیکاتور روزانه</div>
+<table class="indtable"><thead><tr><th>اندیکاتور</th><th>مقدار</th><th>سیگنال</th><th>قدرت</th><th>روند</th><th>توضیح</th></tr></thead><tbody id="indBody"></tbody></table>
+</section>
+
+<div class="note">
+<b>روش آینده‌نگر:</b> این صفحه پیش‌بینی قطعی قیمت انجام نمی‌دهد. وضعیت فعلی ۲۰ اندیکاتور از OHLC روزانه ساخته می‌شود؛ سپس وضعیت فعلی با وضعیت‌های مشابه در <b>گذشته</b> مقایسه می‌شود و فقط بازده‌های بعد از آن نقاط تاریخی برای افق‌های ۱، ۵ و ۲۰ روز محاسبه می‌شوند. درصد مثبت، میانگین/میانه بازده، بدترین/بهترین بازده و تعداد نمونه‌ها نمایش داده می‌شود.
+<br><b>محدودیت داده:</b> هیچ کندل مصنوعی ساخته نمی‌شود و intraday_5m در تحلیل وارد نمی‌شود. اگر JSON منتشرشده واقعاً ۳۵۰۰ کندل روزانه داشته باشد، تمام همان کندل‌ها در محاسبات استفاده خواهند شد.
+</div>
+</div>
+
+<script>
+let data=null, s1=null;
+const $=x=>document.getElementById(x);
+const fa=n=>Number(n).toLocaleString('fa-IR',{maximumFractionDigits:0});
+const f2=n=>Number(n).toLocaleString('fa-IR',{maximumFractionDigits:2});
+const pct=n=>(Number(n)>=0?'+':'')+f2(n)+'٪';
+const finite=n=>Number.isFinite(Number(n));
+function unwrap(root){
+  if(!root)return [];
+  const candidates=[
+    root.daily,root.data?.daily,root.market?.daily,root.result?.daily,
+    root.payload?.daily,root.output?.daily,root.market_data?.daily,
+    root.candles?.daily,root.ohlc?.daily
+  ];
+  for(const a of candidates)if(Array.isArray(a))return a;
+  if(Array.isArray(root))return root;
+  return [];
+}
+function field(x,keys){for(const k of keys){if(x&&x[k]!=null&&x[k]!=='')return x[k]}return null}
+function normDaily(){
+  const raw=unwrap(data);
+  const out=[],seen=new Set();
+  for(const x of raw){
+    const time=field(x,['date','time','t','timestamp','datetime','day']);
+    const open=Number(field(x,['open','o','Open','OPEN']));
+    const high=Number(field(x,['high','h','High','HIGH']));
+    const low=Number(field(x,['low','l','Low','LOW']));
+    const close=Number(field(x,['close','c','Close','CLOSE','price']));
+    if(!finite(open)||!finite(high)||!finite(low)||!finite(close)||!time)continue;
+    if(high<Math.max(open,close)||low>Math.min(open,close))continue;
+    const key=String(time)+'|'+open+'|'+high+'|'+low+'|'+close;
+    if(!seen.has(key)){seen.add(key);out.push({time,open,high,low,close})}
+  }
+  out.sort((a,b)=>{
+    const da=Date.parse(a.time),db=Date.parse(b.time);
+    if(Number.isFinite(da)&&Number.isFinite(db))return da-db;
+    return String(a.time).localeCompare(String(b.time));
+  });
+  return out;
+}
+function sma(a,n){let o=Array(a.length).fill(null);if(n<1)return o;let s=0;for(let i=0;i<a.length;i++){s+=a[i];if(i>=n)s-=a[i-n];if(i>=n-1)o[i]=s/n}return o}
+function ema(a,n){let o=Array(a.length).fill(null);if(a.length<n)return o;let s=0;for(let i=0;i<n;i++)s+=a[i];let e=s/n,k=2/(n+1);o[n-1]=e;for(let i=n;i<a.length;i++){e=a[i]*k+e*(1-k);o[i]=e}return o}
+function rsi(a,n=14){let o=Array(a.length).fill(null);if(a.length<=n)return o;let g=0,l=0;for(let i=1;i<=n;i++){let d=a[i]-a[i-1];g+=Math.max(d,0);l+=Math.max(-d,0)}g/=n;l/=n;o[n]=l===0?100:100-100/(1+g/l);for(let i=n+1;i<a.length;i++){let d=a[i]-a[i-1],u=Math.max(d,0),dn=Math.max(-d,0);g=(g*(n-1)+u)/n;l=(l*(n-1)+dn)/n;o[i]=l===0?100:100-100/(1+g/l)}return o}
+function macd(a){const ef=ema(a,12),es=ema(a,26),m=a.map((_,i)=>ef[i]!=null&&es[i]!=null?ef[i]-es[i]:null),sig=Array(a.length).fill(null),hist=Array(a.length).fill(null);let vals=[],e=null,k=2/10;
+for(let i=0;i<a.length;i++){if(m[i]!=null)vals.push(m[i]);if(vals.length===9){e=vals.slice(0,9).reduce((x,y)=>x+y,0)/9;sig[i]=e;for(let j=i+1;j<a.length;j++)if(m[j]!=null){e=m[j]*k+e*(1-k);sig[j]=e}break}}
+for(let i=0;i<a.length;i++)if(m[i]!=null&&sig[i]!=null)hist[i]=m[i]-sig[i];return{m,sig,hist}}
+function atr(rs,n=14){let tr=Array(rs.length).fill(null),o=Array(rs.length).fill(null);for(let i=1;i<rs.length;i++)tr[i]=Math.max(rs[i].high-rs[i].low,Math.abs(rs[i].high-rs[i-1].close),Math.abs(rs[i].low-rs[i-1].close));if(rs.length<=n)return o;let v=tr.slice(1,n+1).reduce((x,y)=>x+y,0)/n;o[n]=v;for(let i=n+1;i<rs.length;i++){v=(v*(n-1)+tr[i])/n;o[i]=v}return o}
+function adx(rs,n=14){let o=Array(rs.length).fill(null),tr=[],p=[],m=[];for(let i=1;i<rs.length;i++){let h=rs[i].high,l=rs[i].low,ph=rs[i-1].high,pl=rs[i-1].low;tr.push(Math.max(h-l,Math.abs(h-rs[i-1].close),Math.abs(l-rs[i-1].close)));let u=h-ph,d=pl-l;p.push(u>d&&u>0?u:0);m.push(d>u&&d>0?d:0)}if(tr.length<n)return o;let T=tr.slice(0,n).reduce((a,b)=>a+b,0),P=p.slice(0,n).reduce((a,b)=>a+b,0),M=m.slice(0,n).reduce((a,b)=>a+b,0),dx=[];for(let i=n;i<=tr.length;i++){if(i>n){T=T-T/n+tr[i-1];P=P-P/n+p[i-1];M=M-M/n+m[i-1]}let pi=100*P/(T||1),mi=100*M/(T||1),d=100*Math.abs(pi-mi)/(pi+mi||1);dx.push({idx:i,d,pi,mi})}if(dx.length<n)return o;let e=dx.slice(0,n).reduce((a,b)=>a+b.d,0)/n;for(let k=n-1;k<dx.length;k++){if(k>=n)e=(e*(n-1)+dx[k].d)/n;o[dx[k].idx]=e}return o}
+function stoch(rs,n=14,s=3){let k=Array(rs.length).fill(null),d=Array(rs.length).fill(null);for(let i=n-1;i<rs.length;i++){let q=rs.slice(i-n+1,i+1),lo=Math.min(...q.map(x=>x.low)),hi=Math.max(...q.map(x=>x.high));k[i]=100*(rs[i].close-lo)/(hi-lo||1)}for(let i=0;i<rs.length;i++)if(i>=n-1+s-1){let z=k.slice(i-s+1,i+1).filter(v=>v!=null);if(z.length===s)d[i]=z.reduce((a,b)=>a+b,0)/s}return{k,d}}
+function boll(a,n=20,m=2){let mid=sma(a,n),up=Array(a.length).fill(null),dn=Array(a.length).fill(null),bw=Array(a.length).fill(null),pb=Array(a.length).fill(null);for(let i=n-1;i<a.length;i++){let av=mid[i],ss=0;for(let j=i-n+1;j<=i;j++)ss+=(a[j]-av)**2;let sd=Math.sqrt(ss/n);up[i]=av+m*sd;dn[i]=av-m*sd;bw[i]=(up[i]-dn[i])/(av||1)*100;pb[i]=(a[i]-dn[i])/((up[i]-dn[i])||1)}return{mid,up,dn,bw,pb}}
+function roc(a,n=14){let o=Array(a.length).fill(null);for(let i=n;i<a.length;i++)o[i]=(a[i]/a[i-n]-1)*100;return o}
+function momentum(a,n=10){let o=Array(a.length).fill(null);for(let i=n;i<a.length;i++)o[i]=a[i]-a[i-n];return o}
+function williams(rs,n=14){let o=Array(rs.length).fill(null);for(let i=n-1;i<rs.length;i++){let q=rs.slice(i-n+1,i+1),hi=Math.max(...q.map(x=>x.high)),lo=Math.min(...q.map(x=>x.low));o[i]=-100*(hi-rs[i].close)/(hi-lo||1)}return o}
+function cci(rs,n=20){let tp=rs.map(x=>(x.high+x.low+x.close)/3),av=sma(tp,n),o=Array(rs.length).fill(null);for(let i=n-1;i<rs.length;i++){let md=rs.slice(i-n+1,i+1).map((_,j)=>Math.abs(tp[i-n+1+j]-av[i])).reduce((a,b)=>a+b,0)/n;o[i]=(tp[i]-av[i])/(0.015*(md||1))}return o}
+function donchian(rs,n=20){let pos=Array(rs.length).fill(null),hi=Array(rs.length).fill(null),lo=Array(rs.length).fill(null);for(let i=n-1;i<rs.length;i++){let q=rs.slice(i-n+1,i+1);hi[i]=Math.max(...q.map(x=>x.high));lo[i]=Math.min(...q.map(x=>x.low));pos[i]=(rs[i].close-lo[i])/((hi[i]-lo[i])||1)*100}return{pos,hi,lo}}
+function supertrend(rs,n=10,mult=3){let a=atr(rs,n),up=Array(rs.length).fill(null),dn=Array(rs.length).fill(null),trend=Array(rs.length).fill(null),line=Array(rs.length).fill(null);for(let i=0;i<rs.length;i++){if(a[i]==null)continue;let mid=(rs[i].high+rs[i].low)/2;up[i]=mid+mult*a[i];dn[i]=mid-mult*a[i];if(i===0)continue;let fu=up[i],fd=dn[i];if(up[i-1]!=null&&rs[i-1].close<=up[i-1])fu=Math.min(up[i],up[i-1]);if(dn[i-1]!=null&&rs[i-1].close>=dn[i-1])fd=Math.max(dn[i],dn[i-1]);up[i]=fu;dn[i]=fd;if(trend[i-1]==null)trend[i]=rs[i].close>=mid?1:-1;else if(trend[i-1]<0&&rs[i].close>fu)trend[i]=1;else if(trend[i-1]>0&&rs[i].close<fd)trend[i]=-1;else trend[i]=trend[i-1];line[i]=trend[i]>0?fd:fu}return{trend,line}}
+function fmtDate(v){if(v==null)return'—';let d=new Date(v);return isNaN(d)?String(v):d.toLocaleDateString('fa-IR')}
+function last(a){return a[a.length-1]??null}
+function signal(v){return v>20?['مثبت','pos']:v<-20?['منفی','neg']:['خنثی','neu']}
+function strength(v){return Math.min(100,Math.round(Math.abs(v)))}
+function build(rs){
+ const c=rs.map(x=>x.close),S20=sma(c,20),S50=sma(c,50),S200=sma(c,200),E20=ema(c,20),E50=ema(c,50),E200=ema(c,200),R=rsi(c),MC=macd(c),A=adx(rs),ST=stoch(rs),AT=atr(rs),BB=boll(c),ROC=roc(c),MOM=momentum(c),W=williams(rs),CCI=cci(rs),DC=donchian(rs),SUP=supertrend(rs);
+ const i=rs.length-1,z=c[i], vals=[];
+ function add(name,value,score,trend,desc){vals.push({name,value,score:Math.max(-100,Math.min(100,score||0)),trend,desc})}
+ const pctDist=(x)=>x==null?0:Math.max(-100,Math.min(100,(z/x-1)*500));
+ add('SMA 20',S20[i],pctDist(S20[i]),z>S20[i]?'صعودی':'نزولی','قیمت نسبت به میانگین ۲۰ روزه');
+ add('SMA 50',S50[i],pctDist(S50[i]),z>S50[i]?'صعودی':'نزولی','قیمت نسبت به میانگین ۵۰ روزه');
+ add('EMA 20',E20[i],pctDist(E20[i]),z>E20[i]?'صعودی':'نزولی','قیمت نسبت به میانگین نمایی ۲۰ روزه');
+ add('EMA 50',E50[i],pctDist(E50[i]),z>E50[i]?'صعودی':'نزولی','قیمت نسبت به میانگین نمایی ۵۰ روزه');
+ add('RSI 14',R[i],R[i]==null?0:(R[i]-50)*2,R[i]>55?'صعودی':R[i]<45?'نزولی':'خنثی','بالای ۵۵ صعودی و زیر ۴۵ نزولی');
+ add('MACD 12/26/9',MC.m[i],MC.m[i]==null?0:(MC.m[i]>MC.sig[i]?55:-55),MC.m[i]>MC.sig[i]?'صعودی':'نزولی','MACD نسبت به خط سیگنال');
+ add('ADX 14',A[i],A[i]==null?0:(A[i]>=20?(MC.m[i]>MC.sig[i]?45:-45):0),A[i]>=20?(MC.m[i]>MC.sig[i]?'روند صعودی':'روند نزولی'):'روند ضعیف','قدرت روند؛ جهت از MACD گرفته می‌شود');
+ add('Stochastic 14,3',ST.k[i],ST.k[i]==null?0:(ST.k[i]-50)*1.5,ST.k[i]>55?'صعودی':ST.k[i]<45?'نزولی':'خنثی','موقعیت بسته‌شدن در دامنه ۱۴ روزه');
+ add('ATR 14',AT[i],0,AT[i]>(AT[i-1]||AT[i])?'نوسان رو به افزایش':'نوسان عادی','اندازه نوسان؛ جهت مستقل ندارد');
+ add('Bollinger %B 20',BB.pb[i],BB.pb[i]==null?0:(BB.pb[i]-.5)*180,BB.pb[i]>.55?'صعودی':BB.pb[i]<.45?'نزولی':'خنثی','موقعیت قیمت داخل باند بولینگر');
+ add('SMA 200',S200[i],pctDist(S200[i]),z>S200[i]?'صعودی':'نزولی','روند بلندمدت');
+ add('EMA 200',E200[i],pctDist(E200[i]),z>E200[i]?'صعودی':'نزولی','روند نمایی بلندمدت');
+ add('ROC 14',ROC[i],ROC[i]==null?0:Math.max(-100,Math.min(100,ROC[i]*8)),ROC[i]>1?'صعودی':ROC[i]<-1?'نزولی':'خنثی','نرخ تغییر ۱۴ روزه');
+ add('Momentum 10',MOM[i],MOM[i]==null?0:Math.max(-100,Math.min(100,(MOM[i]/z)*1000)),MOM[i]>0?'صعودی':MOM[i]<0?'نزولی':'خنثی','مومنتوم ۱۰ روزه');
+ add('Williams %R 14',W[i],W[i]==null?0:(W[i]+50)*1.5,W[i]>-45?'صعودی':W[i]<-55?'نزولی':'خنثی','موقعیت در دامنه ۱۴ روزه');
+ add('CCI 20',CCI[i],CCI[i]==null?0:Math.max(-100,Math.min(100,CCI[i]/2)),CCI[i]>50?'صعودی':CCI[i]<-50?'نزولی':'خنثی','انحراف قیمت از میانگین');
+ add('Donchian 20',DC.pos[i],DC.pos[i]==null?0:(DC.pos[i]-50)*1.6,DC.pos[i]>60?'صعودی':DC.pos[i]<40?'نزولی':'خنثی','جایگاه قیمت در کانال ۲۰ روزه');
+ add('Bollinger Bandwidth',BB.bw[i],0,BB.bw[i]>(BB.bw[i-1]||BB.bw[i])?'افزایش نوسان':'کاهش/عادی','عرض نسبی باند؛ جهت ندارد');
+ add('Supertrend 10,3',SUP.trend[i],SUP.trend[i]>0?70:-70,SUP.trend[i]>0?'صعودی':'نزولی','جهت Supertrend');
+ return {c,S20,S50,S200,E20,E50,E200,R,MC,A,ST,AT,BB,ROC,MOM,W,CCI,DC,SUP,vals};
+}
+function featuresAt(rs,i){
+ if(i<0)return null;
+ const sub=rs.slice(0,i+1); const b=build(sub); return b.vals.map(x=>x.score);
+}
+function similarity(a,b){
+ let sa=0,sb=0,saa=0,sbb=0,sab=0,n=0;
+ for(let i=0;i<a.length;i++){if(!Number.isFinite(a[i])||!Number.isFinite(b[i]))continue;let x=a[i]/100,y=b[i]/100;sa+=x;sb+=y;saa+=x*x;sbb+=y*y;sab+=x*y;n++}
+ if(n<8)return 0; const den=Math.sqrt(saa*sbb)||1; return Math.max(0,Math.min(1,(sab/den+1)/2));
+}
+function analogues(rs,current,horizon){
+ const minLook=50, end=rs.length-horizon-1, arr=[];
+ if(end<minLook)return [];
+ const cur=current.vals.map(x=>x.score);
+ const step=Math.max(1,Math.floor((end-minLook)/1200));
+ for(let i=minLook;i<=end;i+=step){
+   const f=featuresAt(rs,i),sim=similarity(cur,f);
+   if(sim>0)arr.push({i,sim,ret:(rs[i+horizon].close/rs[i].close-1)*100});
+ }
+ arr.sort((a,b)=>b.sim-a.sim);
+ return arr.slice(0,80);
+}
+function futureStats(rs,b,h){
+ const aa=analogues(rs,b,h); if(aa.length<5)return null;
+ const re=aa.map(x=>x.ret).sort((a,b)=>a-b),pos=re.filter(x=>x>0).length/re.length;
+ const mean=re.reduce((a,x)=>a+x,0)/re.length,med=re[Math.floor(re.length/2)];
+ const q=p=>re[Math.max(0,Math.min(re.length-1,Math.floor((re.length-1)*p)))];
+ const avgSim=aa.reduce((a,x)=>a+x.sim,0)/aa.length;
+ return {n:aa.length,pos,mean,med,q25:q(.25),q75:q(.75),min:re[0],max:re[re.length-1],avgSim};
+}
+function renderFuture(id,s,h){
+ if(!s){$(id+'label').textContent='نمونه کافی نیست';$(id+'txt').textContent='برای این افق داده/نمونه تاریخی کافی نیست';$(id+'bar').style.width='0%';return}
+ const label=s.mean>0&&s.pos>=.58?'تمایل صعودی':s.mean<0&&s.pos<=.42?'تمایل نزولی':'خنثی';
+ $(id+'label').textContent=label;
+ $(id+'label').className='big '+(label==='تمایل صعودی'?'up':label==='تمایل نزولی'?'down':'yellow');
+ $(id+'bar').style.width=Math.round(s.pos*100)+'%';
+ $(id+'txt').textContent=`مثبت: ${f2(s.pos*100)}٪ • میانگین: ${pct(s.mean)} • میانه: ${pct(s.med)} • دامنه: ${pct(s.min)} تا ${pct(s.max)} • نمونه: ${fa(s.n)} • شباهت میانگین: ${f2(s.avgSim*100)}٪`;
+}
+function renderTable(b){
+ const body=$('indBody');body.innerHTML='';
+ b.vals.forEach((x,i)=>{
+   const [lab,cls]=signal(x.score),tr=x.trend||'—';
+   let val=x.value==null?'داده کافی نیست':(Math.abs(x.value)>1000?fa(x.value/10):f2(x.value));
+   const trr=tr.includes('صعود')?'<span class="pos">'+tr+'</span>':tr.includes('نزول')?'<span class="neg">'+tr+'</span>':tr.includes('ضعیف')||tr.includes('عادی')||tr.includes('کاهش')?'<span class="neu">'+tr+'</span>':tr;
+   body.insertAdjacentHTML('beforeend',`<tr><td>${i+1}. ${x.name}</td><td>${val}</td><td><span class="pill ${cls}">${lab}</span></td><td>${strength(x.score)}٪</td><td>${trr}</td><td>${x.desc}</td></tr>`);
+ });
+}
+function renderProfit(rs,b,s5,s20){
+ const c=b.c,z=last(c),r5=c.length>5?(z/c[c.length-6]-1)*100:null,r20=c.length>20?(z/c[c.length-21]-1)*100:null,r60=c.length>60?(z/c[c.length-61]-1)*100:null;
+ $('histReturns').innerHTML=`۵ روز: <b>${r5==null?'—':pct(r5)}</b><br>۲۰ روز: <b>${r20==null?'—':pct(r20)}</b><br>۶۰ روز: <b>${r60==null?'—':pct(r60)}</b>`;
+ const a=b.AT.at(-1),up=z+a*1.5,dn=z-a*1.5;
+ $('atrScenario').innerHTML=`ATR14: <b>${fa(a/10)}</b> تومان<br>هدف +1.5 ATR: <b>${fa(up/10)}</b><br>سناریوی -1.5 ATR: <b>${fa(dn/10)}</b><br><span class="muted">سناریو است، نه سود تضمینی.</span>`;
+ $('expected').innerHTML=`۱ روز: <b>${s1?.mean==null?'—':pct(s1.mean)}</b><br>۵ روز: <b>${s5?.mean==null?'—':pct(s5.mean)}</b><br>۲۰ روز: <b>${s20?.mean==null?'—':pct(s20.mean)}</b>`;
+ $('ret20').textContent=r20==null?'—':pct(r20);
+}
+function render(rs){
+ const raw=unwrap(data),bad=Math.max(0,raw.length-rs.length);
+ $('rawN').textContent=fa(raw.length);$('badN').textContent=fa(bad);
+ $('source').textContent=data?.source||data?.meta?.source||'JSON';
+ $('calcN').textContent=fa(rs.length)+' رکورد کامل';
+ $('dataState').textContent=rs.length>=200?'کافی برای تحلیل بلندمدت':rs.length>=50?'کافی برای تحلیل پایه':'ناکافی';
+ $('n').textContent=fa(rs.length);
+ if(!rs.length){$('p').textContent=$('time').textContent=$('range').textContent='—';draw(rs);$('decision').textContent='کندل روزانه پیدا نشد';$('reason').textContent='مسیر data/market.json یا ساختار daily را بررسی کنید.';return}
+ const z=last(rs),b=build(rs),cl=b.c;
+ $('p').textContent=fa(z.close/10);$('time').textContent=fmtDate(z.time);$('range').textContent=fmtDate(rs[0].time)+' تا '+fmtDate(z.time);
+ $('validCount').textContent=fa(b.vals.filter(x=>x.value!=null).length)+' / ۲۰';
+ $('rsi').textContent=b.R.at(-1)==null?'—':f2(b.R.at(-1));
+ $('macd').textContent=b.MC.m.at(-1)==null?'—':f2(b.MC.m.at(-1)/10);
+ $('adx').textContent=b.A.at(-1)==null?'—':f2(b.A.at(-1));
+ $('ma').textContent=b.S20.at(-1)!=null&&b.S50.at(-1)!=null?fa(b.S20.at(-1)/10)+' / '+fa(b.S50.at(-1)/10):'—';
+ const scores=b.vals.filter(x=>x.value!=null).map(x=>x.score),overall=scores.length?scores.reduce((a,x)=>a+x,0)/scores.length:0;
+ const label=overall>20?'تمایل صعودی روزانه':overall<-20?'تمایل نزولی روزانه':'خنثی / انتظار روزانه';
+ $('decision').textContent=label;$('decision').className=label.includes('صعود')?'up':label.includes('نزول')?'down':'yellow';
+ $('trend').textContent=overall>15?'صعودی ↗':overall<-15?'نزولی ↘':'خنثی →';
+ $('alignment').textContent='قدرت سیگنال ترکیبی: '+f2(Math.abs(overall))+'٪ • ۲۰ اندیکاتور با وزن برابر';
+ $('meter').style.width=Math.min(100,Math.abs(overall))+'%';
+ const pos=scores.filter(x=>x>20).length,neg=scores.filter(x=>x<-20).length;
+ $('reason').textContent=`مثبت ${fa(pos)} • منفی ${fa(neg)} • خنثی ${fa(scores.length-pos-neg)}؛ این بخش وضعیت فعلی است و برای آینده از مقایسه تاریخی جداگانه استفاده می‌شود.`;
+ renderTable(b);draw(rs);
+ s1=futureStats(rs,b,1);const s5=futureStats(rs,b,5),s20=futureStats(rs,b,20);
+ renderFuture('f1',s1,1);renderFuture('f5',s5,5);renderFuture('f20',s20,20);
+ renderProfit(rs,b,s5,s20);
+}
+function draw(rs){
+ const c=$('c'),r=c.getBoundingClientRect(),d=window.devicePixelRatio||1;c.width=Math.max(1,r.width*d);c.height=Math.max(1,r.height*d);const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);x.clearRect(0,0,r.width,r.height);
+ if(rs.length<2){x.fillStyle='#8da2ba';x.font='13px Tahoma';x.textAlign='center';x.fillText('کندل روزانه واقعی در daily[] موجود نیست',r.width/2,r.height/2);return}
+ const vis=rs.slice(-200),hi=Math.max(...vis.map(z=>z.high)),lo=Math.min(...vis.map(z=>z.low)),st=r.width/vis.length,py=p=>r.height-22-(p-lo)/(hi-lo||1)*(r.height-44);
+ x.strokeStyle='#19314a';for(let i=1;i<5;i++){x.beginPath();x.moveTo(0,r.height*i/5);x.lineTo(r.width,r.height*i/5);x.stroke()}
+ const closes=vis.map(z=>z.close),ma=sma(closes,20),up=[],dn=[];for(let i=0;i<vis.length;i++){if(ma[i]==null){up.push(null);dn.push(null);continue}let q=closes.slice(Math.max(0,i-19),i+1),m=ma[i],sd=Math.sqrt(q.reduce((s,v)=>s+(v-m)**2,0)/q.length);up.push(m+2*sd);dn.push(m-2*sd)}
+ function line(arr){x.beginPath();let on=false;arr.forEach((v,i)=>{if(v==null){on=false;return}let xx=i*st+st/2,yy=py(v);if(!on){x.moveTo(xx,yy);on=true}else x.lineTo(xx,yy)});x.stroke()}
+ x.lineWidth=1;x.strokeStyle='#5f87aa';line(ma);x.strokeStyle='#7b91aa';line(up);line(dn);
+ vis.forEach((z,i)=>{let xx=i*st+st/2;x.strokeStyle=z.close>=z.open?'#72e6a7':'#ff718b';x.fillStyle=x.strokeStyle;x.beginPath();x.moveTo(xx,py(z.high));x.lineTo(xx,py(z.low));x.stroke();let top=Math.min(py(z.open),py(z.close)),h=Math.max(2,Math.abs(py(z.open)-py(z.close)));x.fillRect(xx-st*.32,top,Math.max(2,st*.64),h)});
+ x.fillStyle='#8da2ba';x.font='10px Tahoma';x.textAlign='right';x.fillText('۲۰۰ کندل آخر',r.width-8,14);
+}
+async function load(){
+ try{
+   const r=await fetch('data/market.json?x='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);
+   data=await r.json();render(normDaily());$('status').textContent='JSON زنده — تحلیل Daily';$('status').className='muted';
+ }catch(e){
+   $('status').textContent='خطا در دریافت JSON';$('status').className='down';
+   $('decision').textContent='خطا در دریافت market.json';$('reason').textContent='مسیر مورد انتظار: data/market.json';
+ }
+}
+window.addEventListener('resize',()=>data&&draw(normDaily()));
+load();setInterval(load,60000);
+</script>
+</body></html>
