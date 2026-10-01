@@ -1,1 +1,36 @@
+name: Update Gold JSON
 
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Collect latest gold price
+        run: python collector.py
+
+      - name: Save updated JSON
+        run: |
+          git config user.name "gold-data-bot"
+          git config user.email "actions@users.noreply.github.com"
+
+          git add data/market.json
+
+          git diff --cached --quiet || git commit -m "Update gold market data"
+
+          git push
