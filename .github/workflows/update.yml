@@ -2,52 +2,50 @@ name: Update Gold Market Data
 
 on:
   schedule:
-    # اجرا تقریباً هر 5 دقیقه
     - cron: "*/5 * * * *"
 
-  # امکان اجرای دستی از بخش Actions
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  update-gold-data:
+  collect:
 
     runs-on: ubuntu-latest
 
     steps:
 
-      # دریافت آخرین نسخه Repository
-      - name: Checkout repository
+      - name: Get repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # نصب Python
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
 
-      # اجرای دریافت و به‌روزرسانی آرشیو
-      - name: Update gold historical data
-        run: |
-          python collector.py
+      - name: Collect latest gold data
+        run: python collector.py
 
-      # ذخیره تغییرات JSON در GitHub
-      - name: Commit updated market data
+      - name: Save updated JSON
         run: |
 
-          git config user.name "gold-market-bot"
-
+          git config user.name "gold-data-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add data/market.json
 
           if git diff --cached --quiet; then
             echo "No new market data."
-          else
-            git commit -m "Update gold market data"
-            git push
+            exit 0
           fi
+
+          git commit -m "Update gold market data"
+
+          git fetch origin main
+
+          git rebase origin/main
+
+          git push origin HEAD:main
