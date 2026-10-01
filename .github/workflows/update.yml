@@ -6,6 +6,11 @@ on:
 
   workflow_dispatch:
 
+# جلوگیری از اجرای همزمان چند Update
+concurrency:
+  group: gold-market-update
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -16,7 +21,7 @@ jobs:
 
     steps:
 
-      - name: Get repository
+      - name: Get latest repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -26,10 +31,19 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Collect latest gold data
-        run: python collector.py
+      # اول آخرین نسخه main را می‌گیریم
+      - name: Sync with latest main
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
 
-      - name: Save updated JSON
+      # دریافت قیمت و آرشیو
+      - name: Collect latest gold data
+        run: |
+          python collector.py
+
+      # ثبت تغییر JSON
+      - name: Commit updated JSON
         run: |
 
           git config user.name "gold-data-bot"
@@ -44,8 +58,21 @@ jobs:
 
           git commit -m "Update gold market data"
 
+      # گرفتن آخرین تغییرات درست قبل از Push
+      - name: Sync before push
+        run: |
           git fetch origin main
 
-          git rebase origin/main
+          git rebase origin/main || {
+            echo "Rebase conflict detected."
 
+            git checkout --theirs data/market.json
+            git add data/market.json
+
+            GIT_EDITOR=true git rebase --continue
+          }
+
+      # ارسال به GitHub
+      - name: Push updated JSON
+        run: |
           git push origin HEAD:main
