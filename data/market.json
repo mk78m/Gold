@@ -1,6 +1,6 @@
 {
   "schema": "gold-iran-market-v3",
-  "updated_at": "2026-10-08T01:14:00Z",
+  "updated_at": "2026-10-08T07:27:00Z",
   "source": "TGJU",
   "symbol": "IRG18",
   "currency": "IRR",
@@ -35336,6 +35336,11 @@
     {
       "time": "2026-10-08T01:10:00Z",
       "price": 261081000,
+      "source": "TGJU"
+    },
+    {
+      "time": "2026-10-08T07:25:00Z",
+      "price": 260031000,
       "source": "TGJU"
     }
   ],
