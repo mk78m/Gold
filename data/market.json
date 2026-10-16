@@ -1,6 +1,6 @@
 {
   "schema": "gold-iran-market-v3",
-  "updated_at": "2026-10-15T22:33:00Z",
+  "updated_at": "2026-10-16T00:41:00Z",
   "source": "TGJU",
   "symbol": "IRG18",
   "currency": "IRR",
@@ -35527,6 +35527,11 @@
       "time": "2026-10-15T22:30:00Z",
       "price": 260871000,
       "source": "TGJU"
+    },
+    {
+      "time": "2026-10-16T00:40:00Z",
+      "price": 260831000,
+      "source": "TGJU"
     }
   ],
   "history_10y_close": [
@@ -53127,7 +53132,7 @@
     "historical_bootstrap_status": "complete",
     "daily_history_note": "Daily OHLC comes from TGJU. No synthetic candles are created.",
     "collection_interval": "5 minutes",
-    "historical_cutoff_requested": "2016-10-15",
+    "historical_cutoff_requested": "2016-10-16",
     "last_historical_update_count": 0,
     "intraday_snapshot_interval": "5 minutes",
     "intraday_candle_method": "OHLC aggregated from observed 5-minute snapshots",
